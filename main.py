@@ -1,11 +1,14 @@
 import logging
 import sqlite3
+import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-import os
-TOKEN = os.environ.get('BOT_TOKEN')
 
-# ===== БАЗА ДАННЫХ =====
+# ===== НАСТРОЙКИ =====
+# Токен берётся из переменной окружения (для безопасности)
+TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")  # замените на свой, если не используете окружение
+
+# ===== БАЗА ДАННЫХ SQLite =====
 DB_PATH = "users.db"
 
 def init_db():
@@ -35,8 +38,7 @@ def save_user_branches(user_id, branches_set):
     conn.commit()
     conn.close()
 
-# ===== УСЛОВИЯ: для каждой ветви несколько вариантов ключевых слов =====
-# Каждый вариант — список слов, которые ДОЛЖНЫ присутствовать в сообщении
+# ===== УСЛОВИЯ: для каждой ветви список вариантов (каждый вариант — список ключевых слов) =====
 CONDITIONS = {
     # Плоть свет
     "плоть_свет": [
@@ -245,6 +247,7 @@ CONDITIONS = {
         ["задал", "один", "вопрос", "и", "ушёл", "из", "библиотеки"],
         ["задала", "один", "вопрос", "и", "ушла", "из", "библиотеки"],
         ["ограничился", "одним", "знанием"],
+        ["ограничилась", "одним", "знанием"],
         ["не", "стал", "жадничать", "в", "поиске", "истины"],
         ["не", "стала", "жадничать", "в", "поиске", "истины"],
     ],
@@ -277,7 +280,7 @@ CONDITIONS = {
     ],
 }
 
-# ===== ОПИСАНИЯ ВЕТВЕЙ (как в прошлом варианте) =====
+# ===== ОПИСАНИЯ ВЕТВЕЙ (26 описаний) =====
 BRANCH_DESCRIPTIONS = {
     "плоть_свет": "**Путь Целителя**: вы обрели гармонию со своим телом. Теперь вы можете исцелять раны, восстанавливать утраченные органы и даже замедлять старение. Ваше тело — храм, и вы его бережёте.",
     "плоть_тьма": "**Путь Разрушителя**: вы превратили плоть в оружие. Вы способны усиливать себя до чудовищных пределов, разрушать плоть врагов касанием и принимать гибридные формы. Но с каждым превращением вы теряете человечность.",
@@ -311,12 +314,11 @@ BRANCH_DESCRIPTIONS = {
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ===== ПОИСК ВЕТВИ ПО КЛЮЧЕВЫМ СЛОВАМ (ПО ВАРИАНТАМ) =====
+# ===== ПОИСК ВЕТВИ ПО КЛЮЧЕВЫМ СЛОВАМ =====
 def find_branch_by_text(text):
-    words = set(text.lower().split())  # множество слов сообщения
+    words = set(text.lower().split())
     for branch_key, variants in CONDITIONS.items():
         for variant in variants:
-            # Проверяем, что все слова варианта присутствуют в сообщении
             if all(word in words for word in variant):
                 return branch_key
     return None
@@ -356,7 +358,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await update.message.reply_text(
                 f"Поздравляю! Ты выполнил(а) условие и разблокировал(а) новую ветвь магии.\n\n{description}"
             )
-    # Если ничего не найдено — игнорируем
+    # Если ничего не найдено — игнорируем сообщение
 
 # ===== ЗАПУСК =====
 def main():
