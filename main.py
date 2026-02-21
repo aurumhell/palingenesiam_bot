@@ -361,7 +361,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Когда выполнишь условие, напиши мне сообщение, описывающее твой подвиг. "
         "Я сам пойму, какую ветвь ты разблокировал."
     )
-    async def my_branches(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def my_branches(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Показывает список разблокированных пользователем ветвей магии."""
     user_id = update.effective_user.id
     unlocked = get_user_branches(user_id)
@@ -435,4 +435,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
